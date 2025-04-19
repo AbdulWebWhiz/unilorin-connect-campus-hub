@@ -44,7 +44,7 @@ const Layout = () => {
   
   return (
     <div className="min-h-screen bg-background">
-      {shouldShowSidebar() && <Sidebar />}
+      {shouldShowSidebar() && <Sidebar expanded={isSidebarExpanded} setExpanded={setIsSidebarExpanded} />}
       
       <main 
         className={cn(
