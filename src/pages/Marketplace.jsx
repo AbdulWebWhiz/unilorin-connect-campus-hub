@@ -11,7 +11,7 @@ import ListItemDialog from '@/components/marketplace/ListItemDialog';
 const Marketplace = () => {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({
@@ -80,7 +80,7 @@ const Marketplace = () => {
   const filteredItems = items.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = category ? item.category === category : true;
+    const matchesCategory = category === 'all' ? true : item.category === category;
     
     return matchesSearch && matchesCategory;
   });
@@ -127,7 +127,7 @@ const Marketplace = () => {
             className="mt-2 text-uniblue-500"
             onClick={() => {
               setSearchTerm('');
-              setCategory('');
+              setCategory('all');
             }}
           >
             Clear all filters
