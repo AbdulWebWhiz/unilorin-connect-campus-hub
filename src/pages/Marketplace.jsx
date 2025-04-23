@@ -85,6 +85,11 @@ const Marketplace = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Function to handle opening the dialog
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -95,7 +100,7 @@ const Marketplace = () => {
         
         <Button
           className="mt-4 md:mt-0 bg-uniblue-500 hover:bg-uniblue-600"
-          onClick={() => setIsDialogOpen(true)}
+          onClick={handleOpenDialog}
         >
           <Plus className="mr-2 h-4 w-4" />
           List an Item
