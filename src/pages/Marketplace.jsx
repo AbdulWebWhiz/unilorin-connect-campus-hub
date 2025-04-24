@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -77,6 +76,17 @@ const Marketplace = () => {
     });
   };
   
+  const handleDeleteItem = (itemId) => {
+    const updatedItems = items.filter(item => item.id !== itemId);
+    setItems(updatedItems);
+    localStorage.setItem('marketplaceItems', JSON.stringify(updatedItems));
+    
+    toast({
+      title: 'Item deleted',
+      description: 'Your item has been successfully removed from the marketplace'
+    });
+  };
+  
   const filteredItems = items.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -85,7 +95,6 @@ const Marketplace = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Function to handle opening the dialog
   const handleOpenDialog = () => {
     setIsDialogOpen(true);
   };
@@ -121,6 +130,7 @@ const Marketplace = () => {
               key={item.id} 
               item={item}
               onContactSeller={handleContactSeller}
+              onDelete={handleDeleteItem}
             />
           ))}
         </div>
