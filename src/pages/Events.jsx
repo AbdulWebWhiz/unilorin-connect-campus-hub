@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 
 const Events = () => {
   const { currentUser } = useAuth();
@@ -22,6 +22,7 @@ const Events = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filterCategory, setFilterCategory] = useState('');
   const [date, setDate] = useState(new Date());
+  const [showUpcomingOnly, setShowUpcomingOnly] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -123,10 +124,11 @@ const Events = () => {
     });
   };
   
-  // Filter events based on category and date
+  // Filter events based on category, date, and upcoming toggle
   const filteredEvents = events.filter(event => {
     const eventDate = new Date(event.date);
     const selectedDate = new Date(date);
+    const now = new Date();
     
     const dateMatches = 
       eventDate.getFullYear() === selectedDate.getFullYear() &&
@@ -135,7 +137,9 @@ const Events = () => {
     
     const categoryMatches = filterCategory ? event.category === filterCategory : true;
     
-    return dateMatches && categoryMatches;
+    const isUpcoming = showUpcomingOnly ? eventDate > now : true;
+    
+    return dateMatches && categoryMatches && isUpcoming;
   });
   
   // Sort events by date (most recent first)
@@ -207,11 +211,26 @@ const Events = () => {
           </Select>
         </div>
         
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="upcoming-events"
+            checked={showUpcomingOnly}
+            onCheckedChange={setShowUpcomingOnly}
+          />
+          <label
+            htmlFor="upcoming-events"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Show upcoming events only
+          </label>
+        </div>
+        
         <Button 
           variant="outline" 
           onClick={() => {
             setDate(new Date());
             setFilterCategory('');
+            setShowUpcomingOnly(false);
           }}
         >
           Reset Filters
