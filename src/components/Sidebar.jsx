@@ -22,8 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
-const Sidebar = () => {
-  const [expanded, setExpanded] = useState(true);
+const Sidebar = ({ expanded, setExpanded }) => {
   const { currentUser, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
