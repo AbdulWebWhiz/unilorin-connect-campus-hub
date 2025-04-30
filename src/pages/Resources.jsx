@@ -19,8 +19,8 @@ const Resources = () => {
   const [resources, setResources] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [courseFilter, setCourseFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [courseFilter, setCourseFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('all');
   const [newResource, setNewResource] = useState({
     title: '',
@@ -28,7 +28,7 @@ const Resources = () => {
     link: '',
     category: '',
     course: '',
-    year: ''
+    year: 'none'
   });
   
   // Load resources from localStorage on mount
@@ -161,8 +161,8 @@ const Resources = () => {
       resource.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
       resource.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = categoryFilter ? resource.category === categoryFilter : true;
-    const matchesCourse = courseFilter ? resource.course === courseFilter : true;
+    const matchesCategory = categoryFilter === 'all' ? true : resource.category === categoryFilter;
+    const matchesCourse = courseFilter === 'all' ? true : resource.course === courseFilter;
     const matchesTab = activeTab === 'all' || 
                       (activeTab === 'uploaded' && resource.uploaderId === currentUser.id);
     
@@ -251,8 +251,8 @@ const Resources = () => {
           variant="outline"
           onClick={() => {
             setSearchTerm('');
-            setCategoryFilter('');
-            setCourseFilter('');
+            setCategoryFilter('all');
+            setCourseFilter('all');
           }}
         >
           Clear Filters
