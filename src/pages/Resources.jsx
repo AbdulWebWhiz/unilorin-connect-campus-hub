@@ -198,6 +198,7 @@ const Resources = () => {
               Share Resource
             </Button>
           </DialogTrigger>
+          
           <DialogContent className="sm:max-w-[550px]">
             <DialogHeader>
               <DialogTitle>Share a Resource</DialogTitle>
