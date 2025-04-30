@@ -225,7 +225,7 @@ const Resources = () => {
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {categories.map((cat) => (
                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
               ))}
@@ -239,7 +239,7 @@ const Resources = () => {
               <SelectValue placeholder="All Courses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Courses</SelectItem>
+              <SelectItem value="all">All Courses</SelectItem>
               {courses.map((course) => (
                 <SelectItem key={course} value={course}>{course}</SelectItem>
               ))}
@@ -418,7 +418,7 @@ const Resources = () => {
                   <SelectValue placeholder="Select year level" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not specified</SelectItem>
+                  <SelectItem value="none">Not specified</SelectItem>
                   {yearOptions.map((year) => (
                     <SelectItem key={year} value={year}>{year}</SelectItem>
                   ))}
