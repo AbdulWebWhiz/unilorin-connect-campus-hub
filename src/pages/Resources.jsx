@@ -189,13 +189,132 @@ const Resources = () => {
           <p className="text-gray-600 mt-1">Share and access study materials, lecture notes, and more</p>
         </div>
         
-        <Button
-          className="mt-4 md:mt-0 bg-uniblue-500 hover:bg-uniblue-600"
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Share Resource
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              className="mt-4 md:mt-0 bg-uniblue-500 hover:bg-uniblue-600"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Share Resource
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[550px]">
+            <DialogHeader>
+              <DialogTitle>Share a Resource</DialogTitle>
+              <DialogDescription>
+                Share study materials, notes, or other academic resources with your fellow students.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Title *
+                </Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., Calculus I Notes"
+                  className="col-span-3"
+                  value={newResource.title}
+                  onChange={(e) => setNewResource({...newResource, title: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  placeholder="Describe the resource (content, usefulness, etc.)"
+                  className="col-span-3"
+                  value={newResource.description}
+                  onChange={(e) => setNewResource({...newResource, description: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="link" className="text-right">
+                  Link *
+                </Label>
+                <Input
+                  id="link"
+                  placeholder="https://example.com/resource"
+                  className="col-span-3"
+                  value={newResource.link}
+                  onChange={(e) => setNewResource({...newResource, link: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">
+                  Category *
+                </Label>
+                <Select 
+                  value={newResource.category} 
+                  onValueChange={(value) => setNewResource({...newResource, category: value})}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryOptions.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="course" className="text-right">
+                  Course Code *
+                </Label>
+                <Input
+                  id="course"
+                  placeholder="e.g., MTH101"
+                  className="col-span-3"
+                  value={newResource.course}
+                  onChange={(e) => setNewResource({...newResource, course: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="year" className="text-right">
+                  Year Level
+                </Label>
+                <Select 
+                  value={newResource.year} 
+                  onValueChange={(value) => setNewResource({...newResource, year: value})}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select year level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not specified</SelectItem>
+                    {yearOptions.map((year) => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveResource}
+                className="bg-uniblue-500 hover:bg-uniblue-600"
+              >
+                Share Resource
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       
       {/* Tabs */}
@@ -322,126 +441,6 @@ const Resources = () => {
           <p className="text-gray-500 mt-2">Adjust your filters or be the first to share a resource!</p>
         </div>
       )}
-      
-      {/* Share Resource Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Share a Resource</DialogTitle>
-            <DialogDescription>
-              Share study materials, notes, or other academic resources with your fellow students.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Title *
-              </Label>
-              <Input
-                id="title"
-                placeholder="e.g., Calculus I Notes"
-                className="col-span-3"
-                value={newResource.title}
-                onChange={(e) => setNewResource({...newResource, title: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                placeholder="Describe the resource (content, usefulness, etc.)"
-                className="col-span-3"
-                value={newResource.description}
-                onChange={(e) => setNewResource({...newResource, description: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="link" className="text-right">
-                Link *
-              </Label>
-              <Input
-                id="link"
-                placeholder="https://example.com/resource"
-                className="col-span-3"
-                value={newResource.link}
-                onChange={(e) => setNewResource({...newResource, link: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">
-                Category *
-              </Label>
-              <Select 
-                value={newResource.category} 
-                onValueChange={(value) => setNewResource({...newResource, category: value})}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryOptions.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="course" className="text-right">
-                Course Code *
-              </Label>
-              <Input
-                id="course"
-                placeholder="e.g., MTH101"
-                className="col-span-3"
-                value={newResource.course}
-                onChange={(e) => setNewResource({...newResource, course: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="year" className="text-right">
-                Year Level
-              </Label>
-              <Select 
-                value={newResource.year} 
-                onValueChange={(value) => setNewResource({...newResource, year: value})}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select year level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Not specified</SelectItem>
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSaveResource}
-              className="bg-uniblue-500 hover:bg-uniblue-600"
-            >
-              Share Resource
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
