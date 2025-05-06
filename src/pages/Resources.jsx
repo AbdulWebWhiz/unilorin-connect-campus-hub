@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Plus, FileText, Download, BookOpen, Upload, File } from 'lucide-react';
+import { Search, Filter, Plus, FileText, Download, BookOpen, File, FileUp } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -312,7 +311,7 @@ const Resources = () => {
                       onClick={() => document.getElementById('file').click()}
                       className="flex items-center gap-2"
                     >
-                      <Upload className="h-4 w-4" />
+                      <FileUp className="h-4 w-4" />
                       Choose File
                     </Button>
                     {uploadedFile && (
