@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -399,7 +400,7 @@ const Resources = () => {
                   <Badge variant="outline" className="bg-gray-50">
                     {resource.course}
                   </Badge>
-                  {resource.year && (
+                  {resource.year && resource.year !== 'none' && (
                     <Badge variant="outline" className="bg-gray-50">
                       {resource.year}
                     </Badge>
