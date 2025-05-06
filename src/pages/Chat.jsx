@@ -1,23 +1,28 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useNotifications } from '@/context/NotificationContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import { Search, Send } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import ChatList from '@/components/chat/ChatList';
+import ChatWindow from '@/components/chat/ChatWindow';
+import UserProfileCard from '@/components/chat/UserProfileCard';
 
 const Chat = () => {
   const { currentUser } = useAuth();
-  const { addNotification } = useNotifications();
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
-  const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const messagesEndRef = useRef(null);
+  const [showProfile, setShowProfile] = useState(false);
+  
+  // Add online status to users (simulation)
+  useEffect(() => {
+    // Update all users with random online status for demonstration
+    const users = JSON.parse(localStorage.getItem('unilorinUsers') || '[]');
+    const updatedUsers = users.map(user => ({
+      ...user,
+      isOnline: Math.random() > 0.5 // Random online status
+    }));
+    localStorage.setItem('unilorinUsers', JSON.stringify(updatedUsers));
+  }, []);
   
   // Load conversations from localStorage on mount
   useEffect(() => {
@@ -28,63 +33,72 @@ const Chat = () => {
       conv.participants.some(p => p.id === currentUser.id)
     );
     
-    setConversations(userConversations);
+    // Update participants with latest user data (including online status)
+    const updatedConversations = userConversations.map(conv => {
+      const updatedParticipants = conv.participants.map(participant => {
+        if (participant.id === currentUser.id) return currentUser;
+        
+        // Get latest data for other participants
+        const users = JSON.parse(localStorage.getItem('unilorinUsers') || '[]');
+        const latestData = users.find(u => u.id === participant.id);
+        return latestData || participant;
+      });
+      
+      return {
+        ...conv,
+        participants: updatedParticipants
+      };
+    });
+    
+    setConversations(updatedConversations);
     
     // If no active conversation but conversations exist, set the first one as active
-    if (userConversations.length > 0 && !activeConversation) {
-      setActiveConversation(userConversations[0].id);
+    if (updatedConversations.length > 0 && !activeConversation) {
+      setActiveConversation(updatedConversations[0].id);
     }
     
     // For demo purposes, create sample conversations if none exist
-    if (userConversations.length === 0) {
-      const sampleUsers = [
-        { id: 'user1', name: 'John Doe', profilePic: null },
-        { id: 'user2', name: 'Jane Smith', profilePic: null },
-        { id: 'user3', name: 'Ahmed Mohammed', profilePic: null }
-      ];
+    if (updatedConversations.length === 0) {
+      const users = JSON.parse(localStorage.getItem('unilorinUsers') || '[]');
       
-      const sampleConversations = sampleUsers.map(user => ({
-        id: `conv-${user.id}`,
-        participants: [currentUser, user],
-        messages: [
-          {
-            id: `msg-${user.id}-1`,
-            senderId: user.id,
-            text: `Hi ${currentUser.name}, welcome to UniConnect!`,
-            timestamp: new Date(Date.now() - 3600000).toISOString()
-          }
-        ],
-        lastMessageTimestamp: new Date(Date.now() - 3600000).toISOString()
-      }));
+      // Filter out current user and get 3 random users
+      const otherUsers = users.filter(user => user.id !== currentUser.id);
+      const sampleUsers = otherUsers.slice(0, 3);
       
-      setConversations(sampleConversations);
-      localStorage.setItem('chatConversations', JSON.stringify(sampleConversations));
-      setActiveConversation(sampleConversations[0].id);
+      if (sampleUsers.length > 0) {
+        const sampleConversations = sampleUsers.map(user => ({
+          id: `conv-${user.id}`,
+          participants: [
+            currentUser, 
+            { ...user, isOnline: Math.random() > 0.5 } // Add random online status
+          ],
+          messages: [
+            {
+              id: `msg-${user.id}-1`,
+              senderId: user.id,
+              text: `Hi ${currentUser.name}, welcome to UniConnect!`,
+              timestamp: new Date(Date.now() - 3600000).toISOString(),
+              status: 'read'
+            }
+          ],
+          lastMessageTimestamp: new Date(Date.now() - 3600000).toISOString()
+        }));
+        
+        setConversations(sampleConversations);
+        localStorage.setItem('chatConversations', JSON.stringify(sampleConversations));
+        setActiveConversation(sampleConversations[0].id);
+      }
     }
   }, [currentUser, activeConversation]);
   
-  // Scroll to bottom of messages when conversation changes or new messages added
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeConversation, conversations]);
-  
-  const getInitials = (name) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-  
-  const getOtherParticipant = (conversation) => {
-    return conversation.participants.find(p => p.id !== currentUser.id);
-  };
-  
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    
+  // Handle sending a new message
+  const handleSendMessage = (messageText) => {
     const newMessage = {
       id: `msg-${Date.now()}`,
       senderId: currentUser.id,
-      text: message,
-      timestamp: new Date().toISOString()
+      text: messageText,
+      timestamp: new Date().toISOString(),
+      status: 'delivered' // In a real app, this would be updated by the server
     };
     
     setConversations(prevConversations => {
@@ -103,197 +117,98 @@ const Chat = () => {
       return updatedConversations;
     });
     
-    setMessage('');
+    // In a real app, here we would send the message to a WebSocket or Firebase
     
-    // Get the other participant for the notification
-    const conversation = conversations.find(c => c.id === activeConversation);
-    if (conversation) {
-      const otherUser = getOtherParticipant(conversation);
-      
-      // In a real app, this would send a notification to the other user
-      // For demo purposes, we'll add it to the current user's notifications
-      addNotification({
-        title: `Message sent to ${otherUser.name}`,
-        message: `You: ${message.substring(0, 30)}${message.length > 30 ? '...' : ''}`,
-        type: 'message'
-      });
+    // Simulate reply after random delay (1-3 seconds) for demo purposes
+    if (Math.random() > 0.3) { // 70% chance of reply
+      const conversation = conversations.find(c => c.id === activeConversation);
+      if (conversation) {
+        const otherUser = conversation.participants.find(p => p.id !== currentUser.id);
+        
+        setTimeout(() => {
+          const replyMessage = {
+            id: `msg-reply-${Date.now()}`,
+            senderId: otherUser.id,
+            text: getRandomReply(),
+            timestamp: new Date().toISOString()
+          };
+          
+          setConversations(prevConversations => {
+            const updatedConversations = prevConversations.map(conv => {
+              if (conv.id === activeConversation) {
+                return {
+                  ...conv,
+                  messages: [...conv.messages, replyMessage],
+                  lastMessageTimestamp: replyMessage.timestamp
+                };
+              }
+              return conv;
+            });
+            
+            localStorage.setItem('chatConversations', JSON.stringify(updatedConversations));
+            return updatedConversations;
+          });
+        }, 1000 + Math.random() * 2000);
+      }
     }
   };
   
-  // Filter conversations based on search query
-  const filteredConversations = conversations.filter(conv => {
-    const otherUser = getOtherParticipant(conv);
-    return otherUser.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-  
-  // Sort conversations by last message timestamp (most recent first)
-  const sortedConversations = [...filteredConversations].sort((a, b) => {
-    return new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp);
-  });
+  // Helper function to generate random replies for demo
+  const getRandomReply = () => {
+    const replies = [
+      "That's great!",
+      "Thanks for the info!",
+      "I'll keep that in mind.",
+      "Let me check and get back to you.",
+      "When is the next lecture?",
+      "Did you submit the assignment?",
+      "Are you going to the event?",
+      "I'll see you at the library later.",
+      "Have you seen the announcement?",
+      "The deadline is tomorrow!"
+    ];
+    return replies[Math.floor(Math.random() * replies.length)];
+  };
   
   // Find the active conversation object
   const conversation = conversations.find(c => c.id === activeConversation);
+  
+  // Get the other participant for profile viewing
+  const getOtherParticipant = () => {
+    if (!conversation) return null;
+    return conversation.participants.find(p => p.id !== currentUser.id);
+  };
   
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Messages</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Conversations List */}
-        <Card className="md:col-span-1 overflow-hidden">
-          <div className="p-4 border-b">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                placeholder="Search conversations..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <ScrollArea className="h-[calc(80vh-8rem)]">
-            {sortedConversations.length > 0 ? (
-              <div className="p-2">
-                {sortedConversations.map(conv => {
-                  const otherUser = getOtherParticipant(conv);
-                  const lastMessage = conv.messages[conv.messages.length - 1];
-                  
-                  return (
-                    <div
-                      key={conv.id}
-                      className={cn(
-                        "flex items-center p-3 rounded-lg cursor-pointer",
-                        conv.id === activeConversation 
-                          ? "bg-uniblue-50 text-uniblue-700" 
-                          : "hover:bg-gray-50"
-                      )}
-                      onClick={() => setActiveConversation(conv.id)}
-                    >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={otherUser.profilePic} />
-                        <AvatarFallback className="bg-uniblue-200 text-uniblue-700">
-                          {getInitials(otherUser.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="ml-3 overflow-hidden flex-1">
-                        <div className="flex justify-between items-center">
-                          <p className="font-medium truncate">{otherUser.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(lastMessage.timestamp).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <p className="text-sm text-gray-600 truncate">
-                          {lastMessage.senderId === currentUser.id ? 'You: ' : ''}
-                          {lastMessage.text}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-gray-500">
-                <p>No conversations found</p>
-              </div>
-            )}
-          </ScrollArea>
+        <Card className="md:col-span-4 lg:col-span-3 overflow-hidden h-[80vh]">
+          <ChatList 
+            conversations={conversations}
+            activeConversation={activeConversation}
+            setActiveConversation={setActiveConversation}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            currentUser={currentUser}
+          />
         </Card>
         
         {/* Chat Window */}
-        <Card className="md:col-span-2 flex flex-col h-[80vh]">
-          {conversation ? (
-            <>
-              {/* Chat Header */}
-              <div className="p-4 border-b flex items-center">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={getOtherParticipant(conversation).profilePic} />
-                  <AvatarFallback className="bg-uniblue-200 text-uniblue-700">
-                    {getInitials(getOtherParticipant(conversation).name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="ml-3">
-                  <p className="font-medium">{getOtherParticipant(conversation).name}</p>
-                </div>
-              </div>
-              
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {conversation.messages.map((msg) => {
-                    const isCurrentUser = msg.senderId === currentUser.id;
-                    const sender = conversation.participants.find(p => p.id === msg.senderId);
-                    
-                    return (
-                      <div key={msg.id} className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}>
-                        <div className="flex items-end space-x-2">
-                          {!isCurrentUser && (
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={sender.profilePic} />
-                              <AvatarFallback className="bg-uniblue-200 text-uniblue-700">
-                                {getInitials(sender.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                          )}
-                          
-                          <div className={cn(
-                            "px-4 py-2 rounded-lg max-w-md break-words",
-                            isCurrentUser 
-                              ? "bg-uniblue-500 text-white rounded-br-none" 
-                              : "bg-gray-100 text-gray-800 rounded-bl-none"
-                          )}>
-                            <p>{msg.text}</p>
-                            <p className={cn(
-                              "text-xs mt-1",
-                              isCurrentUser ? "text-blue-100" : "text-gray-500"
-                            )}>
-                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-              
-              {/* Message Input */}
-              <div className="p-4 border-t">
-                <form 
-                  className="flex space-x-2" 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }}
-                >
-                  <Input
-                    placeholder="Type a message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    type="submit" 
-                    className="bg-uniblue-500 hover:bg-uniblue-600"
-                    disabled={!message.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                    <span className="sr-only">Send</span>
-                  </Button>
-                </form>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center p-4">
-              <div className="text-center">
-                <p className="text-gray-500 mb-4">Select a conversation to start chatting</p>
-              </div>
-            </div>
-          )}
+        <Card className="md:col-span-8 lg:col-span-6 flex flex-col h-[80vh]">
+          <ChatWindow 
+            conversation={conversation}
+            currentUser={currentUser}
+            onSendMessage={handleSendMessage}
+          />
         </Card>
+        
+        {/* User Profile Side Panel (visible on larger screens) */}
+        <div className="hidden lg:block lg:col-span-3 h-[80vh]">
+          <UserProfileCard user={getOtherParticipant()} />
+        </div>
       </div>
     </div>
   );

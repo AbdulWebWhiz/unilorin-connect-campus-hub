@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Sign up function
-  const signup = (name, email, password, matric) => {
+  const signup = (name, email, password, matric, faculty, department) => {
     // In a real app, you would make an API call to your backend
     // For now, we'll just simulate this with localStorage
     return new Promise((resolve, reject) => {
@@ -37,12 +37,19 @@ export const AuthProvider = ({ children }) => {
         }
 
         // Create new user
+        const matricYear = matric ? matric.substring(0, 2) : '';
+        const year = matricYear ? `20${matricYear}` : '';
+
         const newUser = {
           id: Date.now().toString(),
           name,
           email,
           matric,
+          faculty,
+          department,
+          year,
           profilePic: null,
+          isOnline: true,
           createdAt: new Date().toISOString()
         };
 
@@ -72,8 +79,17 @@ export const AuthProvider = ({ children }) => {
         const user = users.find(u => u.email === email && u.password === password);
         
         if (user) {
+          // Set user as online
+          const updatedUser = { ...user, isOnline: true };
+          
+          // Update in users array
+          const updatedUsers = users.map(u => 
+            u.id === updatedUser.id ? updatedUser : u
+          );
+          localStorage.setItem('unilorinUsers', JSON.stringify(updatedUsers));
+          
           // Don't store password in currentUser
-          const { password, ...userWithoutPassword } = user;
+          const { password, ...userWithoutPassword } = updatedUser;
           setCurrentUser(userWithoutPassword);
           localStorage.setItem('unilorinUser', JSON.stringify(userWithoutPassword));
           
@@ -93,6 +109,15 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     return new Promise((resolve) => {
+      // Set user as offline
+      if (currentUser) {
+        const users = JSON.parse(localStorage.getItem('unilorinUsers') || '[]');
+        const updatedUsers = users.map(u => 
+          u.id === currentUser.id ? { ...u, isOnline: false } : u
+        );
+        localStorage.setItem('unilorinUsers', JSON.stringify(updatedUsers));
+      }
+      
       setCurrentUser(null);
       localStorage.removeItem('unilorinUser');
       
@@ -123,6 +148,16 @@ export const AuthProvider = ({ children }) => {
           const updatedUser = { ...currentUser, ...profileData };
           setCurrentUser(updatedUser);
           localStorage.setItem('unilorinUser', JSON.stringify(updatedUser));
+          
+          // Update user in conversations
+          const conversations = JSON.parse(localStorage.getItem('chatConversations') || '[]');
+          const updatedConversations = conversations.map(conv => {
+            const updatedParticipants = conv.participants.map(p => 
+              p.id === currentUser.id ? updatedUser : p
+            );
+            return { ...conv, participants: updatedParticipants };
+          });
+          localStorage.setItem('chatConversations', JSON.stringify(updatedConversations));
           
           toast({
             title: "Profile updated",
