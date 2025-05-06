@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Plus, FileText, Download, BookOpen } from 'lucide-react';
+import { Search, Filter, Plus, FileText, Download, BookOpen, Upload, File } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -22,10 +22,14 @@ const Resources = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('all');
+  const [uploadedFile, setUploadedFile] = useState(null);
   const [newResource, setNewResource] = useState({
     title: '',
     description: '',
-    link: '',
+    fileName: '',
+    fileType: '',
+    fileSize: '',
+    fileContent: null,
     category: '',
     course: '',
     year: 'none'
@@ -43,7 +47,9 @@ const Resources = () => {
           id: 'res1',
           title: 'Complete Calculus Notes',
           description: 'Comprehensive notes covering differential and integral calculus, including examples and practice problems.',
-          link: 'https://example.com/calculus-notes',
+          fileName: 'calculus_notes.pdf',
+          fileType: 'application/pdf',
+          fileSize: '2.4 MB',
           category: 'Notes',
           course: 'MTH101',
           year: '1st Year',
@@ -56,7 +62,9 @@ const Resources = () => {
           id: 'res2',
           title: 'Introduction to Programming with Python PDF',
           description: 'Learn the basics of programming using Python. Covers variables, loops, functions, and more.',
-          link: 'https://example.com/python-intro',
+          fileName: 'python_intro.pdf',
+          fileType: 'application/pdf',
+          fileSize: '1.8 MB',
           category: 'Textbook',
           course: 'CSC102',
           year: '1st Year',
@@ -69,7 +77,9 @@ const Resources = () => {
           id: 'res3',
           title: 'Physics Lab Report Template',
           description: 'Standard template for writing physics lab reports, including sections for hypothesis, data, and conclusions.',
-          link: 'https://example.com/physics-template',
+          fileName: 'physics_template.docx',
+          fileType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          fileSize: '540 KB',
           category: 'Template',
           course: 'PHY103',
           year: '1st Year',
@@ -85,11 +95,50 @@ const Resources = () => {
     }
   }, []);
   
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Update the file information in the state
+    setUploadedFile(file);
+    setNewResource({
+      ...newResource,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: formatFileSize(file.size),
+      fileContent: file // We'll store the file object for download functionality
+    });
+  };
+  
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+  
+  const getFileIcon = (fileType) => {
+    if (fileType?.includes('pdf')) {
+      return <FileText className="h-6 w-6 text-uniblue-500" />;
+    } else if (fileType?.includes('word') || fileType?.includes('document')) {
+      return <File className="h-6 w-6 text-uniblue-500" />;
+    } else if (fileType?.includes('sheet') || fileType?.includes('excel')) {
+      return <FileText className="h-6 w-6 text-green-500" />;
+    } else if (fileType?.includes('presentation') || fileType?.includes('powerpoint')) {
+      return <FileText className="h-6 w-6 text-orange-500" />;
+    } else if (fileType?.includes('image')) {
+      return <FileText className="h-6 w-6 text-purple-500" />;
+    } else {
+      return <FileText className="h-6 w-6 text-uniblue-500" />;
+    }
+  };
+  
   const handleSaveResource = () => {
-    if (!newResource.title || !newResource.link || !newResource.category || !newResource.course) {
+    if (!newResource.title || !newResource.fileName || !newResource.category || !newResource.course) {
       toast({
         title: 'Error',
-        description: 'Please fill in all required fields',
+        description: 'Please fill in all required fields and upload a file',
         variant: 'destructive'
       });
       return;
@@ -113,11 +162,15 @@ const Resources = () => {
     setNewResource({
       title: '',
       description: '',
-      link: '',
+      fileName: '',
+      fileType: '',
+      fileSize: '',
+      fileContent: null,
       category: '',
       course: '',
       year: ''
     });
+    setUploadedFile(null);
     
     setIsDialogOpen(false);
     
@@ -128,8 +181,8 @@ const Resources = () => {
   };
   
   const handleDownload = (resource) => {
-    // In a real app, this would initiate a download and track statistics
-    // For demo purposes, just increment the download count and show a toast
+    // In a real app with a server, we would fetch the file from storage
+    // For this demo, we'll simulate a download
     
     setResources(prevResources => {
       const updatedResources = prevResources.map(res => {
@@ -146,20 +199,26 @@ const Resources = () => {
       return updatedResources;
     });
     
-    // Open the link in a new tab
-    window.open(resource.link, '_blank');
+    // Simulate file download
+    // In a real app, we would use window.open with the file URL or create a blob from the file content
     
     toast({
       title: 'Resource downloaded',
-      description: `You're now downloading "${resource.title}"`
+      description: `You're now downloading "${resource.fileName}"`
     });
+    
+    // For the demo, we'll just show a message
+    setTimeout(() => {
+      console.log(`Downloading ${resource.fileName}`);
+    }, 500);
   };
   
   // Filter resources based on search term, category, course and active tab
   const filteredResources = resources.filter(resource => {
     const matchesSearch = 
       resource.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      resource.description.toLowerCase().includes(searchTerm.toLowerCase());
+      resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.fileName.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = categoryFilter === 'all' ? true : resource.category === categoryFilter;
     const matchesCourse = courseFilter === 'all' ? true : resource.course === courseFilter;
@@ -236,16 +295,37 @@ const Resources = () => {
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="link" className="text-right">
-                  Link *
+                <Label htmlFor="file" className="text-right">
+                  Upload File *
                 </Label>
-                <Input
-                  id="link"
-                  placeholder="https://example.com/resource"
-                  className="col-span-3"
-                  value={newResource.link}
-                  onChange={(e) => setNewResource({...newResource, link: e.target.value})}
-                />
+                <div className="col-span-3">
+                  <Input
+                    id="file"
+                    type="file"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => document.getElementById('file').click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Choose File
+                    </Button>
+                    {uploadedFile && (
+                      <div className="flex items-center gap-2 p-2 border rounded bg-gray-50">
+                        {getFileIcon(uploadedFile.type)}
+                        <div>
+                          <p className="text-sm font-medium">{uploadedFile.name}</p>
+                          <p className="text-xs text-gray-500">{formatFileSize(uploadedFile.size)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
@@ -387,7 +467,7 @@ const Resources = () => {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="p-3 bg-uniblue-100 rounded-lg">
-                    <FileText className="h-6 w-6 text-uniblue-500" />
+                    {getFileIcon(resource.fileType)}
                   </div>
                   <Badge className="bg-uniblue-50 text-uniblue-700 border-uniblue-200">
                     {resource.category}
@@ -410,6 +490,11 @@ const Resources = () => {
                 <p className="text-gray-600 text-sm line-clamp-3 mb-4">
                   {resource.description || 'No description provided.'}
                 </p>
+
+                <div className="flex items-center text-sm text-gray-500 mb-4">
+                  <FileText className="h-4 w-4 mr-1" /> 
+                  {resource.fileName} ({resource.fileSize})
+                </div>
                 
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs text-gray-500">
