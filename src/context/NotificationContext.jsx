@@ -21,10 +21,10 @@ export const NotificationProvider = ({ children }) => {
     setUnreadCount(unread);
   }, []);
 
-  // Add a new notification
+  // Add a new notification with guaranteed unique ID
   const addNotification = (notification) => {
     const newNotification = {
-      id: Date.now().toString(),
+      id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Ensure unique ID
       timestamp: new Date().toISOString(),
       read: false,
       ...notification
@@ -39,6 +39,47 @@ export const NotificationProvider = ({ children }) => {
     setUnreadCount(prev => prev + 1);
     
     return newNotification;
+  };
+
+  // Helper function to create notifications for different activities
+  const createActivityNotification = (activityType, userData, itemData) => {
+    let title, message, type;
+    
+    switch(activityType) {
+      case 'resource_upload':
+        title = 'New Resource Shared';
+        message = `${userData?.name || 'Someone'} uploaded "${itemData.title || 'a resource'}"`;
+        type = 'resource';
+        break;
+      case 'event_post':
+        title = 'New Event Posted';
+        message = `${userData?.name || 'Someone'} posted an event: "${itemData.title || 'New event'}"`;
+        type = 'event';
+        break;
+      case 'message_sent':
+        title = 'New Message';
+        message = `${userData?.name || 'Someone'} sent you a message`;
+        type = 'message';
+        break;
+      case 'marketplace_listing':
+        title = 'New Marketplace Listing';
+        message = `${userData?.name || 'Someone'} listed "${itemData.title || 'an item'}" for sale`;
+        type = 'marketplace';
+        break;
+      default:
+        title = 'New Notification';
+        message = 'You have a new notification';
+        type = 'general';
+    }
+    
+    return addNotification({
+      title,
+      message,
+      type,
+      activityType,
+      userData,
+      itemData
+    });
   };
 
   // Mark notification as read
@@ -90,6 +131,7 @@ export const NotificationProvider = ({ children }) => {
     notifications,
     unreadCount,
     addNotification,
+    createActivityNotification,
     markAsRead,
     markAllAsRead,
     deleteNotification
