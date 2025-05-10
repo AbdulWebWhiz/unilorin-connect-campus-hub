@@ -11,6 +11,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/use-toast';
 import { 
+  Dialog, 
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-mobile';
+import { 
   Edit, 
   Save, 
   X, 
@@ -23,14 +42,167 @@ import {
   School 
 } from 'lucide-react';
 
+// EditProfileForm component for reusability
+const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) => {
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  
+  const departmentOptions = [
+    'Agricultural & Environmental Engineering',
+    'Chemical Engineering',
+    'Civil Engineering',
+    'Computer Science',
+    'Electrical & Electronics Engineering',
+    'Food Science & Engineering',
+    'Mechanical Engineering',
+    'Medicine',
+    'Pharmacy',
+    'Statistics',
+    'Other'
+  ];
+
+  const facultyOptions = [
+    'Engineering',
+    'Science',
+    'Medicine',
+    'Arts',
+    'Law',
+    'Education',
+    'Agriculture',
+    'Business Administration',
+    'Social Sciences',
+    'Other'
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="profilePic">Profile Picture URL</Label>
+        <Input
+          id="profilePic"
+          placeholder="https://example.com/profile.jpg"
+          value={profileData.profilePic || ''}
+          onChange={(e) => setProfileData({...profileData, profilePic: e.target.value})}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="name">Full Name</Label>
+        <Input
+          id="name"
+          value={profileData.name}
+          onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={profileData.email}
+          disabled
+        />
+        <p className="text-xs text-gray-500">Email cannot be changed</p>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="matric">Matric Number</Label>
+        <Input
+          id="matric"
+          value={profileData.matric || ''}
+          onChange={(e) => setProfileData({...profileData, matric: e.target.value})}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="faculty">Faculty</Label>
+        <Select 
+          value={profileData.faculty || ''} 
+          onValueChange={(value) => setProfileData({...profileData, faculty: value})}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select your faculty" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Not specified</SelectItem>
+            {facultyOptions.map((faculty) => (
+              <SelectItem key={faculty} value={faculty}>{faculty}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="department">Department</Label>
+        <Select 
+          value={profileData.department || ''} 
+          onValueChange={(value) => setProfileData({...profileData, department: value})}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select your department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Not specified</SelectItem>
+            {departmentOptions.map((dept) => (
+              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="phone">Phone Number</Label>
+        <Input
+          id="phone"
+          value={profileData.phone || ''}
+          onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="bio">Bio</Label>
+        <Textarea
+          id="bio"
+          placeholder="Tell others about yourself..."
+          value={profileData.bio || ''}
+          onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+          rows={4}
+        />
+      </div>
+
+      <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-end gap-4'} mt-6`}>
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          className="w-full md:w-auto"
+        >
+          <X className="mr-2 h-4 w-4" />
+          Cancel
+        </Button>
+        <Button
+          className="w-full md:w-auto bg-green-500 hover:bg-green-600"
+          onClick={onSubmit}
+        >
+          <Save className="mr-2 h-4 w-4" />
+          Save Changes
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const Profile = () => {
   const { currentUser, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',
     matric: '',
     department: '',
+    faculty: '',
     bio: '',
     phone: '',
     profilePic: ''
@@ -40,6 +212,8 @@ const Profile = () => {
   const [userResources, setUserResources] = useState([]);
   const [userLostItems, setUserLostItems] = useState([]);
   
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  
   // Load user data on mount
   useEffect(() => {
     if (currentUser) {
@@ -48,6 +222,7 @@ const Profile = () => {
         email: currentUser.email || '',
         matric: currentUser.matric || '',
         department: currentUser.department || '',
+        faculty: currentUser.faculty || '',
         bio: currentUser.bio || '',
         phone: currentUser.phone || '',
         profilePic: currentUser.profilePic || ''
@@ -84,6 +259,8 @@ const Profile = () => {
     try {
       await updateProfile(profileData);
       setIsEditing(false);
+      setIsDialogOpen(false);
+      setIsSheetOpen(false);
       
       toast({
         title: 'Profile updated',
@@ -98,67 +275,86 @@ const Profile = () => {
     }
   };
   
+  const handleEditClick = () => {
+    if (isMobile) {
+      setIsSheetOpen(true);
+    } else {
+      setIsDialogOpen(true);
+    }
+  };
+  
+  const handleCancel = () => {
+    setIsEditing(false);
+    setIsDialogOpen(false);
+    setIsSheetOpen(false);
+    setProfileData({
+      name: currentUser.name || '',
+      email: currentUser.email || '',
+      matric: currentUser.matric || '',
+      department: currentUser.department || '',
+      faculty: currentUser.faculty || '',
+      bio: currentUser.bio || '',
+      phone: currentUser.phone || '',
+      profilePic: currentUser.profilePic || ''
+    });
+  };
+  
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
-  
-  const departmentOptions = [
-    'Agricultural & Environmental Engineering',
-    'Chemical Engineering',
-    'Civil Engineering',
-    'Computer Science',
-    'Electrical & Electronics Engineering',
-    'Food Science & Engineering',
-    'Mechanical Engineering',
-    'Medicine',
-    'Pharmacy',
-    'Statistics',
-    'Other'
-  ];
   
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
         
-        {!isEditing ? (
-          <Button
-            className="mt-4 md:mt-0 bg-uniblue-500 hover:bg-uniblue-600"
-            onClick={() => setIsEditing(true)}
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Profile
-          </Button>
-        ) : (
-          <div className="mt-4 md:mt-0 flex space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsEditing(false);
-                setProfileData({
-                  name: currentUser.name || '',
-                  email: currentUser.email || '',
-                  matric: currentUser.matric || '',
-                  department: currentUser.department || '',
-                  bio: currentUser.bio || '',
-                  phone: currentUser.phone || '',
-                  profilePic: currentUser.profilePic || ''
-                });
-              }}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
-            <Button
-              className="bg-green-500 hover:bg-green-600"
-              onClick={handleUpdateProfile}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
-          </div>
-        )}
+        {/* Edit Profile Button - Opens Dialog on Desktop, Sheet on Mobile */}
+        <Button
+          className="mt-4 md:mt-0 bg-uniblue-500 hover:bg-uniblue-600"
+          onClick={handleEditClick}
+        >
+          <Edit className="mr-2 h-4 w-4" />
+          Edit Profile
+        </Button>
+
+        {/* Dialog for desktop edit form */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Your Profile</DialogTitle>
+              <DialogDescription>
+                Update your personal information and profile details
+              </DialogDescription>
+            </DialogHeader>
+            <EditProfileForm 
+              profileData={profileData}
+              setProfileData={setProfileData}
+              onSubmit={handleUpdateProfile}
+              onCancel={handleCancel}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Sheet for mobile edit form */}
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetContent className="w-full sm:max-w-lg">
+            <SheetHeader>
+              <SheetTitle>Edit Your Profile</SheetTitle>
+              <SheetDescription>
+                Update your personal information and profile details
+              </SheetDescription>
+            </SheetHeader>
+            <div className="py-6">
+              <EditProfileForm 
+                profileData={profileData}
+                setProfileData={setProfileData}
+                onSubmit={handleUpdateProfile}
+                onCancel={handleCancel}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -179,145 +375,63 @@ const Profile = () => {
             )}
           </CardHeader>
           <CardContent className="pt-4">
-            {isEditing ? (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="profilePic">Profile Picture URL</Label>
-                  <Input
-                    id="profilePic"
-                    placeholder="https://example.com/profile.jpg"
-                    value={profileData.profilePic || ''}
-                    onChange={(e) => setProfileData({...profileData, profilePic: e.target.value})}
-                  />
+            <div className="space-y-4">
+              {profileData.bio && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">About</h3>
+                  <p className="text-gray-700">{profileData.bio}</p>
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-gray-500">Contact Information</h3>
+                
+                <div className="flex items-center text-gray-600">
+                  <Mail className="h-4 w-4 mr-2 text-uniblue-500" />
+                  <span>{profileData.email}</span>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    disabled
-                  />
-                  <p className="text-xs text-gray-500">Email cannot be changed</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="matric">Matric Number</Label>
-                  <Input
-                    id="matric"
-                    value={profileData.matric || ''}
-                    onChange={(e) => setProfileData({...profileData, matric: e.target.value})}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <Select 
-                    value={profileData.department || ''} 
-                    onValueChange={(value) => setProfileData({...profileData, department: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Not specified</SelectItem>
-                      {departmentOptions.map((dept) => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    value={profileData.phone || ''}
-                    onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    placeholder="Tell others about yourself..."
-                    value={profileData.bio || ''}
-                    onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                    rows={4}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {profileData.bio && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">About</h3>
-                    <p className="text-gray-700">{profileData.bio}</p>
+                {profileData.phone && (
+                  <div className="flex items-center text-gray-600">
+                    <Phone className="h-4 w-4 mr-2 text-uniblue-500" />
+                    <span>{profileData.phone}</span>
                   </div>
                 )}
                 
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-500">Contact Information</h3>
-                  
+                {profileData.matric && (
                   <div className="flex items-center text-gray-600">
-                    <Mail className="h-4 w-4 mr-2 text-uniblue-500" />
-                    <span>{profileData.email}</span>
+                    <School className="h-4 w-4 mr-2 text-uniblue-500" />
+                    <span>Matric: {profileData.matric}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="pt-4 border-t">
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Activity</h3>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-uniblue-500">{userListings.length}</p>
+                    <p className="text-xs text-gray-500">Marketplace Listings</p>
                   </div>
                   
-                  {profileData.phone && (
-                    <div className="flex items-center text-gray-600">
-                      <Phone className="h-4 w-4 mr-2 text-uniblue-500" />
-                      <span>{profileData.phone}</span>
-                    </div>
-                  )}
+                  <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-uniblue-500">{userEvents.length}</p>
+                    <p className="text-xs text-gray-500">Events Created</p>
+                  </div>
                   
-                  {profileData.matric && (
-                    <div className="flex items-center text-gray-600">
-                      <School className="h-4 w-4 mr-2 text-uniblue-500" />
-                      <span>Matric: {profileData.matric}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">Activity</h3>
+                  <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-uniblue-500">{userResources.length}</p>
+                    <p className="text-xs text-gray-500">Resources Shared</p>
+                  </div>
                   
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-uniblue-500">{userListings.length}</p>
-                      <p className="text-xs text-gray-500">Marketplace Listings</p>
-                    </div>
-                    
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-uniblue-500">{userEvents.length}</p>
-                      <p className="text-xs text-gray-500">Events Created</p>
-                    </div>
-                    
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-uniblue-500">{userResources.length}</p>
-                      <p className="text-xs text-gray-500">Resources Shared</p>
-                    </div>
-                    
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-uniblue-500">{userLostItems.length}</p>
-                      <p className="text-xs text-gray-500">Lost/Found Reports</p>
-                    </div>
+                  <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-uniblue-500">{userLostItems.length}</p>
+                    <p className="text-xs text-gray-500">Lost/Found Reports</p>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
         
