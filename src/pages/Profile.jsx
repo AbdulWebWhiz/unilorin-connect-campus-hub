@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +28,7 @@ import {
   SheetClose,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Edit, 
   Save, 
@@ -39,12 +39,92 @@ import {
   MapPin, 
   Phone, 
   Mail, 
-  School 
+  School,
+  Upload,
+  UserRound
 } from 'lucide-react';
+
+// ImageUpload component for profile picture
+const ImageUpload = ({ currentImage, onImageChange }) => {
+  const fileInputRef = useRef(null);
+  
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.match('image.*')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file (JPEG, PNG, etc.)",
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Convert to base64 for storage
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        onImageChange(event.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  return (
+    <div className="flex flex-col items-center space-y-4">
+      <div 
+        className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-uniblue-500 transition-colors cursor-pointer"
+        onClick={handleClick}
+      >
+        {currentImage ? (
+          <img 
+            src={currentImage} 
+            alt="Profile" 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <UserRound className="h-16 w-16 text-gray-400" />
+        )}
+        
+        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+          <Upload className="h-8 w-8 text-white" />
+        </div>
+      </div>
+      
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="image/*"
+      />
+      
+      <p className="text-sm text-gray-500">
+        Click to upload a profile picture
+      </p>
+    </div>
+  );
+};
 
 // EditProfileForm component for reusability
 const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) => {
-  const isMobile = useMediaQuery("(max-width: 640px)");
+  const isMobile = useIsMobile();
   
   const departmentOptions = [
     'Agricultural & Environmental Engineering',
@@ -75,13 +155,10 @@ const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) =>
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="profilePic">Profile Picture URL</Label>
-        <Input
-          id="profilePic"
-          placeholder="https://example.com/profile.jpg"
-          value={profileData.profilePic || ''}
-          onChange={(e) => setProfileData({...profileData, profilePic: e.target.value})}
+      <div className="flex justify-center mb-6">
+        <ImageUpload 
+          currentImage={profileData.profilePic} 
+          onImageChange={(image) => setProfileData({...profileData, profilePic: image})}
         />
       </div>
       
