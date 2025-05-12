@@ -15,18 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogTrigger
 } from '@/components/ui/dialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Edit, 
@@ -266,9 +256,7 @@ const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) =>
 
 const Profile = () => {
   const { currentUser, updateProfile } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',
@@ -284,7 +272,7 @@ const Profile = () => {
   const [userResources, setUserResources] = useState([]);
   const [userLostItems, setUserLostItems] = useState([]);
   
-  const isMobile = useIsMobile(); // Fix: Use useIsMobile instead of useMediaQuery
+  const isMobile = useIsMobile();
   
   // Load user data on mount
   useEffect(() => {
@@ -330,9 +318,7 @@ const Profile = () => {
     
     try {
       await updateProfile(profileData);
-      setIsEditing(false);
       setIsDialogOpen(false);
-      setIsSheetOpen(false);
       
       toast({
         title: 'Profile updated',
@@ -347,18 +333,8 @@ const Profile = () => {
     }
   };
   
-  const handleEditClick = () => {
-    if (isMobile) {
-      setIsSheetOpen(true);
-    } else {
-      setIsDialogOpen(true);
-    }
-  };
-  
   const handleCancel = () => {
-    setIsEditing(false);
     setIsDialogOpen(false);
-    setIsSheetOpen(false);
     setProfileData({
       name: currentUser.name || '',
       email: currentUser.email || '',
@@ -381,18 +357,17 @@ const Profile = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
         
-        {/* Edit Profile Button - Opens Dialog on Desktop, Sheet on Mobile */}
-        <Button
-          className="mt-4 md:mt-0 bg-uniblue-500 hover:bg-uniblue-600"
-          onClick={handleEditClick}
-        >
-          <Edit className="mr-2 h-4 w-4" />
-          Edit Profile
-        </Button>
-
-        {/* Dialog for desktop edit form */}
+        {/* Edit Profile Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogTrigger asChild>
+            <Button
+              className="mt-4 md:mt-0 bg-uniblue-500 hover:bg-uniblue-600"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Profile
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Edit Your Profile</DialogTitle>
               <DialogDescription>
@@ -407,26 +382,6 @@ const Profile = () => {
             />
           </DialogContent>
         </Dialog>
-
-        {/* Sheet for mobile edit form */}
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent className="w-full sm:max-w-lg">
-            <SheetHeader>
-              <SheetTitle>Edit Your Profile</SheetTitle>
-              <SheetDescription>
-                Update your personal information and profile details
-              </SheetDescription>
-            </SheetHeader>
-            <div className="py-6">
-              <EditProfileForm 
-                profileData={profileData}
-                setProfileData={setProfileData}
-                onSubmit={handleUpdateProfile}
-                onCancel={handleCancel}
-              />
-            </div>
-          </SheetContent>
-        </Sheet>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
