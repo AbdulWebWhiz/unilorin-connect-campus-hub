@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -289,7 +288,7 @@ const Profile = () => {
   const [userResources, setUserResources] = useState([]);
   const [userLostItems, setUserLostItems] = useState([]);
   
-  const isMobile = useMediaQuery("(max-width: 640px)");
+  const isMobile = useIsMobile(); // Fix: Use useIsMobile instead of useMediaQuery
   
   // Load user data on mount
   useEffect(() => {
