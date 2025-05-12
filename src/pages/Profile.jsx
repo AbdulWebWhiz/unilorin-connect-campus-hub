@@ -86,24 +86,18 @@ const ImageUpload = ({ currentImage, onImageChange }) => {
   };
   
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <div 
-        className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-uniblue-500 transition-colors cursor-pointer"
-        onClick={handleClick}
-      >
-        {currentImage ? (
-          <img 
-            src={currentImage} 
-            alt="Profile" 
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <UserRound className="h-16 w-16 text-gray-400" />
-        )}
-        
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-          <Upload className="h-8 w-8 text-white" />
-        </div>
+    <div className="flex flex-col items-center space-y-2">
+      <div className="relative group">
+        <Avatar className="h-24 w-24 cursor-pointer" onClick={handleClick}>
+          <AvatarImage src={currentImage} />
+          <AvatarFallback className="bg-uniblue-200 text-uniblue-700 text-2xl">
+            {!currentImage ? <UserRound className="h-10 w-10 text-uniblue-500" /> : null}
+          </AvatarFallback>
+          
+          <div className="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Upload className="h-8 w-8 text-white" />
+          </div>
+        </Avatar>
       </div>
       
       <input
@@ -114,7 +108,7 @@ const ImageUpload = ({ currentImage, onImageChange }) => {
         accept="image/*"
       />
       
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 mt-1">
         Click to upload a profile picture
       </p>
     </div>
@@ -153,7 +147,7 @@ const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) =>
   ];
 
   return (
-    <div className="space-y-4">
+    <form className="space-y-4">
       <div className="flex justify-center mb-6">
         <ImageUpload 
           currentImage={profileData.profilePic} 
@@ -161,90 +155,92 @@ const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) =>
         />
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
-        <Input
-          id="name"
-          value={profileData.name}
-          onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={profileData.email}
-          disabled
-        />
-        <p className="text-xs text-gray-500">Email cannot be changed</p>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="matric">Matric Number</Label>
-        <Input
-          id="matric"
-          value={profileData.matric || ''}
-          onChange={(e) => setProfileData({...profileData, matric: e.target.value})}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="faculty">Faculty</Label>
-        <Select 
-          value={profileData.faculty || ''} 
-          onValueChange={(value) => setProfileData({...profileData, faculty: value})}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select your faculty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Not specified</SelectItem>
-            {facultyOptions.map((faculty) => (
-              <SelectItem key={faculty} value={faculty}>{faculty}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <div className="grid gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            value={profileData.name}
+            onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={profileData.email}
+            disabled
+          />
+          <p className="text-xs text-gray-500">Email cannot be changed</p>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="matric">Matric Number</Label>
+          <Input
+            id="matric"
+            value={profileData.matric || ''}
+            onChange={(e) => setProfileData({...profileData, matric: e.target.value})}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="faculty">Faculty</Label>
+          <Select 
+            value={profileData.faculty || ''} 
+            onValueChange={(value) => setProfileData({...profileData, faculty: value})}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your faculty" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Not specified</SelectItem>
+              {facultyOptions.map((faculty) => (
+                <SelectItem key={faculty} value={faculty}>{faculty}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="department">Department</Label>
-        <Select 
-          value={profileData.department || ''} 
-          onValueChange={(value) => setProfileData({...profileData, department: value})}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select your department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Not specified</SelectItem>
-            {departmentOptions.map((dept) => (
-              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
-        <Input
-          id="phone"
-          value={profileData.phone || ''}
-          onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="bio">Bio</Label>
-        <Textarea
-          id="bio"
-          placeholder="Tell others about yourself..."
-          value={profileData.bio || ''}
-          onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-          rows={4}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="department">Department</Label>
+          <Select 
+            value={profileData.department || ''} 
+            onValueChange={(value) => setProfileData({...profileData, department: value})}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Not specified</SelectItem>
+              {departmentOptions.map((dept) => (
+                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            value={profileData.phone || ''}
+            onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea
+            id="bio"
+            placeholder="Tell others about yourself..."
+            value={profileData.bio || ''}
+            onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+            rows={4}
+          />
+        </div>
       </div>
 
       <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-end gap-4'} mt-6`}>
@@ -264,7 +260,7 @@ const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) =>
           Save Changes
         </Button>
       </div>
-    </div>
+    </form>
   );
 };
 
