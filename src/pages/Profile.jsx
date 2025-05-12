@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger
+  DialogTrigger,
+  DialogClose
 } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
@@ -234,14 +236,16 @@ const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) =>
       </div>
 
       <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-end gap-4'} mt-6`}>
-        <Button
-          variant="outline"
-          onClick={onCancel}
-          className="w-full md:w-auto"
-        >
-          <X className="mr-2 h-4 w-4" />
-          Cancel
-        </Button>
+        <DialogClose asChild>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="w-full md:w-auto"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Cancel
+          </Button>
+        </DialogClose>
         <Button
           className="w-full md:w-auto bg-green-500 hover:bg-green-600"
           onClick={onSubmit}
