@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -108,7 +107,7 @@ const ImageUpload = ({ currentImage, onImageChange }) => {
 };
 
 // EditProfileForm component for reusability
-const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) => {
+const EditProfileForm = ({ profileData, setProfileData, onSubmit }) => {
   const isMobile = useIsMobile();
   
   const departmentOptions = [
@@ -239,7 +238,6 @@ const EditProfileForm = ({ profileData, setProfileData, onSubmit, onCancel }) =>
         <DialogClose asChild>
           <Button
             variant="outline"
-            onClick={onCancel}
             className="w-full md:w-auto"
           >
             <X className="mr-2 h-4 w-4" />
@@ -337,20 +335,6 @@ const Profile = () => {
     }
   };
   
-  const handleCancel = () => {
-    setIsDialogOpen(false);
-    setProfileData({
-      name: currentUser.name || '',
-      email: currentUser.email || '',
-      matric: currentUser.matric || '',
-      department: currentUser.department || '',
-      faculty: currentUser.faculty || '',
-      bio: currentUser.bio || '',
-      phone: currentUser.phone || '',
-      profilePic: currentUser.profilePic || ''
-    });
-  };
-  
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -382,7 +366,6 @@ const Profile = () => {
               profileData={profileData}
               setProfileData={setProfileData}
               onSubmit={handleUpdateProfile}
-              onCancel={handleCancel}
             />
           </DialogContent>
         </Dialog>
